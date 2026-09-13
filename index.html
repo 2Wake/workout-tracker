@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym Log &amp; Tracker</title>
+<style>
+  :root{
+    --ink:#22302a;--ink-soft:#556359;--paper:#fbfaf7;--card:#fff;
+    --green:#3e6b54;--green-tint:#e9f0ea;--green-line:#cddccf;
+    --amber:#9a6a12;--amber-tint:#f7efdc;--amber-line:#e6d3a8;
+    --red:#7d3b31;--red-tint:#f6e7e4;--red-line:#e3c4be;
+    --rule:#e2e6df;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:#eceae3;color:var(--ink);font-family:var(--sans);line-height:1.45;}
+  .wrap{max-width:640px;margin:0 auto;background:var(--paper);min-height:100vh;}
+
+  header{position:sticky;top:0;z-index:20;background:var(--paper);padding:16px 18px 0;border-bottom:1px solid var(--rule);}
+  .titrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
+  h1{font-family:var(--serif);font-size:23px;font-weight:600;margin:0;letter-spacing:-.01em;}
+  .sub{font-size:12.5px;color:var(--ink-soft);margin:2px 0 12px;}
+  .hbtns{display:flex;gap:6px;flex:none;}
+  .mini{background:#fff;color:var(--green);border:1px solid var(--green-line);border-radius:8px;padding:7px 11px;font-size:12px;font-weight:600;font-family:var(--sans);cursor:pointer;}
+  .mini:active{background:var(--green-tint);}
+
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex:none;border:1px solid var(--green-line);background:#fff;color:var(--ink-soft);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;white-space:nowrap;}
+  .tab.active{background:var(--green);color:#fff;border-color:var(--green);}
+
+  .warnbar{margin:12px 18px 0;background:var(--amber-tint);border:1px solid var(--amber-line);color:#5f4a15;border-radius:9px;padding:10px 13px;font-size:12.5px;display:none;}
+  .banner{margin:14px 18px 0;background:var(--green);color:#fff;border-radius:10px;padding:12px 14px;}
+  .banner .k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:700;margin:0 0 5px;}
+  .banner p{margin:0;font-size:13px;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);margin:10px 18px 0;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+
+  main{padding:0 18px 48px;}
+  .panel{padding-top:18px;display:none;}
+  .panel.active{display:block;}
+  .day-h{font-family:var(--serif);font-size:20px;font-weight:600;margin:0 0 2px;}
+  .day-focus{font-size:12.5px;color:var(--green);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:0 0 14px;}
+
+  .ex{background:var(--card);border:1px solid var(--rule);border-radius:11px;padding:12px 13px;margin-bottom:10px;}
+  .ex-top{display:flex;align-items:flex-start;gap:11px;}
+  .cb{appearance:none;-webkit-appearance:none;flex:none;width:24px;height:24px;margin:1px 0 0;border:2px solid var(--green-line);border-radius:6px;background:#fff;cursor:pointer;position:relative;}
+  .cb:checked{background:var(--green);border-color:var(--green);}
+  .cb:checked::after{content:"";position:absolute;left:7px;top:3px;width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg);}
+  .ex-body{flex:1;min-width:0;}
+  .ex-name{font-weight:650;font-size:15px;margin:0;display:flex;align-items:center;flex-wrap:wrap;gap:7px;}
+  .ex-target{font-size:13px;color:var(--ink-soft);margin:2px 0 0;}
+  .ex-note{font-size:12px;color:var(--amber);margin:4px 0 0;}
+  .last{font-size:12px;color:var(--green);margin:5px 0 0;font-weight:600;}
+  .badge{font-size:9.5px;letter-spacing:.08em;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:4px;line-height:1.4;}
+  .badge.pt{background:var(--green-tint);color:var(--green);border:1px solid var(--green-line);}
+  .badge.skill{background:var(--amber-tint);color:var(--amber);border:1px solid var(--amber-line);}
+  .log{margin-top:10px;width:100%;border:1px solid var(--rule);border-radius:7px;padding:9px 10px;font-size:13px;font-family:var(--sans);color:var(--ink);background:#fcfcfa;}
+  .log::placeholder{color:#a9b0a7;}
+  .log:focus{outline:2px solid var(--green-line);border-color:var(--green);}
+
+  .savebar{display:flex;gap:10px;align-items:center;margin:16px 0 4px;}
+  .save{flex:1;background:var(--green);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;font-family:var(--sans);cursor:pointer;}
+  .save:active{background:#345a47;}
+  .clearlink{background:none;border:none;color:var(--ink-soft);font-size:12.5px;font-family:var(--sans);cursor:pointer;text-decoration:underline;flex:none;}
+
+  .info-block{background:var(--card);border:1px solid var(--rule);border-radius:11px;padding:14px 16px;margin-bottom:12px;}
+  .info-block h3{font-family:var(--serif);font-size:16px;margin:0 0 8px;}
+  .info-block p,.info-block li{font-size:13px;color:var(--ink-soft);}
+  .info-block ul{margin:6px 0 0;padding-left:18px;}
+  .info-block li{margin:4px 0;}
+  .week{font-size:12.5px;color:var(--ink);line-height:1.9;}
+  .week b{color:var(--green);}
+  .flags{border:1.5px solid var(--red-line);background:var(--red-tint);border-radius:11px;padding:14px 16px;margin-bottom:12px;}
+  .flags h3{color:var(--red);font-family:var(--serif);font-size:16px;margin:0 0 6px;}
+  .flags li{font-size:13px;color:#6a4b44;}
+  .flags ul{margin:6px 0 0;padding-left:18px;}
+
+  .hist-item{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:12px 14px;margin-bottom:9px;}
+  .hist-date{font-weight:700;font-size:13.5px;margin:0;}
+  .hist-day{font-size:12px;color:var(--green);font-weight:600;margin:1px 0 8px;}
+  .hist-e{font-size:12.5px;color:var(--ink-soft);margin:3px 0;padding-left:2px;}
+  .hist-e b{color:var(--ink);font-weight:600;}
+  .hist-del{background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;text-decoration:underline;font-family:var(--sans);margin-top:6px;padding:0;}
+  .empty{color:var(--ink-soft);font-size:13px;text-align:center;padding:30px 10px;}
+  .io{display:flex;gap:8px;margin-bottom:14px;}
+  .io button{flex:1;background:#fff;color:var(--green);border:1px solid var(--green-line);border-radius:9px;padding:11px;font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;}
+  .io button:active{background:var(--green-tint);}
+
+  .stats{display:flex;gap:10px;margin:2px 0 8px;}
+  .stat{flex:1;background:var(--green-tint);border:1px solid var(--green-line);border-radius:11px;padding:14px 8px;text-align:center;}
+  .stat-n{font-family:var(--serif);font-size:28px;font-weight:600;color:var(--green);line-height:1;}
+  .stat-l{font-size:11px;color:var(--ink-soft);margin-top:5px;text-transform:uppercase;letter-spacing:.06em;}
+  .group-h{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--rule);}
+  .wk-sess{font-size:13.5px;color:var(--ink-soft);margin:6px 0;}
+  .wk-sess b{color:var(--ink);}
+  .pr-row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;background:var(--card);border:1px solid var(--rule);border-radius:9px;padding:10px 12px;margin-bottom:7px;}
+  .pr-name{font-weight:650;font-size:13.5px;grid-row:1;}
+  .pr-vals{font-size:12.5px;color:var(--ink-soft);grid-column:1;grid-row:2;}
+  .pr-cur{color:var(--ink);font-weight:600;}
+  .pr-prev{margin-left:6px;}
+  .pr-tag{grid-column:2;grid-row:1 / span 2;align-self:center;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap;}
+  .pr-up{background:#e2f0e6;color:#2f7a4a;}
+  .pr-dn{background:#f6e7e4;color:#a4564a;}
+  .pr-same{background:#eef0ec;color:#6a726a;}
+  .pr-new{background:var(--amber-tint);color:var(--amber);}
+  .wk-note{font-size:11.5px;color:var(--ink-soft);margin-top:14px;}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media print{
+    body{background:#fff;}.wrap{max-width:none;}header{position:static;}
+    .tabs,.hbtns,.savebar,.io,.hist-del,.warnbar{display:none;}
+    .panel{display:block !important;}.ex{break-inside:avoid;}
+    @page{margin:14mm;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="titrow">
+      <div><h1>Gym Log &amp; Tracker</h1><p class="sub">Saves on your device · shows last session</p></div>
+      <div class="hbtns"><button class="mini" onclick="window.print()">Print</button></div>
+    </div>
+    <div class="tabs" id="tabs"></div>
+  </header>
+
+  <div class="warnbar" id="warn">⚠︎ Saving isn't available in this view. <b>Download this file and open it in your browser</b> (or use Export in the History tab) so your progress is kept.</div>
+
+  <div class="banner">
+    <p class="k">Start every session</p>
+    <p><b>Row 10–15 min easy</b> → knee activation → lift. <b>Watch your legs</b> — any symptom down the leg, stop that move.</p>
+  </div>
+  <div class="legend">
+    <span><span class="badge pt">PT</span> prescribed exercise</span>
+    <span><span class="badge skill">SKILL</span> fresh, light, clean range</span>
+  </div>
+
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- PLAN DATA ---------------- */
+const PLAN = {
+  d1:{name:"Day 1 — Lower A",focus:"Quad + single-leg",ex:[
+    {n:"Spanish squat (isometric)",t:"4 × 30–45 sec hold · pain-free angle",tag:"pt",ph:"band/setup · notes"},
+    {n:"Leg press",t:"3 × 10–12 · don't let low back round",ph:"weight · reps · notes"},
+    {n:"Captain Morgans",t:"3 × 8 per leg · slow eccentric",tag:"pt",ph:"weight · notes"},
+    {n:"Eccentric leg extension",t:"3 × 8 · lift both legs, lower slow (3–4 sec) with surgical leg",tag:"pt",note:"Loads the donor site most — keep it light and pain-free through a comfortable range.",ph:"weight · notes"},
+    {n:"Seated leg curl",t:"3 × 12",ph:"weight · notes"},
+    {n:"Calf raises",t:"3 × 15",tag:"pt",ph:"weight · notes"},
+    {n:"Pallof press",t:"2 × 10 each side",ph:"weight · notes"},
+    {n:"Bird-dog",t:"2 × 10 each side",ph:"notes"},
+    {n:"Suitcase carry (KB or DB)",t:"2 × ~30 sec each side · walk tall",note:"Anti-side-bend for your left QL/SI. One weight, one hand.",ph:"weight · notes"}
+  ]},
+  d2:{name:"Day 2 — Upper A",focus:"Push",ex:[
+    {n:"Turkish get-up",t:"3–4 per side · to clean range (¼ / ½)",tag:"skill",note:"Drive glute/oblique, don't crunch-twist or overarch. Train the reverse; extra rep on the weaker side.",ph:"load · range · notes"},
+    {n:"Chest press machine",t:"3 × 10–12",ph:"weight · reps · notes"},
+    {n:"Machine shoulder press",t:"3 × 10–12",ph:"weight · reps · notes"},
+    {n:"Incline dumbbell press",t:"2 × 12",ph:"weight · notes"},
+    {n:"Triceps pushdown",t:"2 × 12",ph:"weight · notes"},
+    {n:"Lateral raises",t:"2 × 15",ph:"weight · notes"},
+    {n:"Dead bug",t:"2 × 10 each side",ph:"notes"},
+    {n:"Superman / prone leg raises",t:"2 × 12 · small, controlled",tag:"pt",note:"Back-extension — ease off if it provokes leg symptoms.",ph:"notes"}
+  ]},
+  d3:{name:"Day 3 — Lower B",focus:"Hip / glute / hamstring + pistol",ex:[
+    {n:"Spanish squat (isometric)",t:"4 × 30–45 sec hold",tag:"pt",ph:"band/setup · notes"},
+    {n:"Pistol squat progression",t:"3 sets per leg · at your level",tag:"pt",note:"Conservative depth on the BTB knee; pain-free range only.",ph:"level (box/assist) · notes"},
+    {n:"Donkey kick (hip extension) machine",t:"3 × 12 per leg · glute-driven, neutral spine",ph:"weight · notes"},
+    {n:"Hip dips (hip hike / pelvic drop)",t:"3 × 10 per side",tag:"pt",ph:"notes"},
+    {n:"Glute bridge with pullover",t:"3 × 10 · brace, don't overarch",tag:"pt",ph:"weight · notes"},
+    {n:"Calf raises",t:"3 × 15",tag:"pt",ph:"weight · notes"}
+  ]},
+  d4:{name:"Day 4 — Upper B",focus:"Pull",ex:[
+    {n:"Turkish get-up",t:"3–4 per side · to clean range",tag:"skill",note:"Fresh and light. Stop any rep that sends symptoms down the leg.",ph:"load · range · notes"},
+    {n:"Lat pulldown",t:"3 × 10–12",ph:"weight · reps · notes"},
+    {n:"Machine row (or 1-arm DB row)",t:"3 × 10–12 · flat back, no jerking",ph:"weight · reps · notes"},
+    {n:"Bent-over DB reverse fly",t:"2 × 15 · light, hinge with flat back",ph:"weight · notes"},
+    {n:"Band pull-aparts",t:"2 × 15 · squeeze shoulder blades",ph:"band · notes"},
+    {n:"Biceps curl",t:"2 × 12",ph:"weight · notes"},
+    {n:"Glute bridge with pullover",t:"3 × 10 · brace, don't overarch",tag:"pt",ph:"weight · notes"},
+    {n:"Bird-dog",t:"2 × 10 each side",ph:"notes"},
+    {n:"Dead bug",t:"2 × 10 each side",ph:"notes"}
+  ]},
+  d5:{name:"Day 5 — Arms / Shoulders",focus:"Optional · + posterior core",ex:[
+    {n:"Turkish get-up",t:"3–4 per side · to clean range",tag:"skill",ph:"load · range · notes"},
+    {n:"Machine or DB shoulder press",t:"3 × 10–12",ph:"weight · reps · notes"},
+    {n:"Lateral raises",t:"3 × 15",ph:"weight · notes"},
+    {n:"Biceps curl",t:"3 × 12",ph:"weight · notes"},
+    {n:"Triceps pushdown / overhead ext.",t:"3 × 12",ph:"weight · notes"},
+    {n:"Band pull-aparts or light cable row",t:"2 × 15",ph:"weight · notes"},
+    {n:"Pallof press",t:"2 × 10 each side",ph:"weight · notes"},
+    {n:"Superman / prone leg raises",t:"2 × 12",tag:"pt",ph:"notes"}
+  ]}
+};
+
+/* ---------------- STORAGE ---------------- */
+const KEY="gymlog_v2";
+let CANSAVE=true;
+try{localStorage.setItem("__t","1");localStorage.removeItem("__t");}catch(e){CANSAVE=false;}
+let store={live:{},checks:{},last:{},history:[]};
+function load(){
+  if(!CANSAVE){document.getElementById("warn").style.display="block";return;}
+  try{const r=localStorage.getItem(KEY);if(r)store=Object.assign(store,JSON.parse(r));}catch(e){}
+}
+function persist(){if(!CANSAVE)return;try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+load();
+
+/* ---------------- RENDER ---------------- */
+let current="d1";
+const tabsEl=document.getElementById("tabs");
+const mainEl=document.getElementById("main");
+
+function buildTabs(){
+  const days=Object.keys(PLAN).map(k=>`<button class="tab" data-p="${k}">${k.replace('d','Day ')}</button>`).join("");
+  tabsEl.innerHTML=days+`<button class="tab" data-p="week">This Week</button><button class="tab" data-p="info">Info</button><button class="tab" data-p="history">History</button>`;
+  setActiveTab();
+}
+function setActiveTab(){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.p===current));
+}
+function exCard(dayKey,i,ex){
+  const key=dayKey+"-"+i;
+  const badge=ex.tag?`<span class="badge ${ex.tag}">${ex.tag.toUpperCase()}</span>`:"";
+  const note=ex.note?`<p class="ex-note">${ex.note}</p>`:"";
+  const lastKey=dayKey+"-"+i;
+  const last=store.last[lastKey]?`<p class="last">Last: ${escapeHtml(store.last[lastKey])}</p>`:"";
+  const liveVal=store.live[key]?escapeHtml(store.live[key]):"";
+  const checked=store.checks[key]?"checked":"";
+  return `<div class="ex"><div class="ex-top">
+    <input type="checkbox" class="cb" data-c="${key}" ${checked}>
+    <div class="ex-body"><p class="ex-name">${ex.n} ${badge}</p><p class="ex-target">${ex.t}</p>${note}${last}</div>
+  </div><input class="log" data-k="${key}" value="${liveVal}" placeholder="${ex.ph}"></div>`;
+}
+function dayPanel(dayKey){
+  const d=PLAN[dayKey];
+  const cards=d.ex.map((e,i)=>exCard(dayKey,i,e)).join("");
+  return `<div class="panel" id="p-${dayKey}">
+    <p class="day-h">${d.name}</p><p class="day-focus">${d.focus}</p>
+    ${cards}
+    <div class="savebar"><button class="save" data-save="${dayKey}">Save session</button><button class="clearlink" data-clear="${dayKey}">Clear</button></div>
+  </div>`;
+}
+function infoPanel(){
+  return `<div class="panel" id="p-info">
+    <p class="day-h">How to run it</p><p class="day-focus">Scheduling · rules · safety</p>
+    <div class="info-block"><h3>Sample week</h3><p class="week">
+      <b>Mon</b> Day 1 (Lower A)<br><b>Tue</b> Day 2 (Upper A)<br><b>Wed</b> PT / rest<br>
+      <b>Thu</b> Day 3 (Lower B)<br><b>Fri</b> Day 4 (Upper B)<br><b>Sat</b> Day 5 (optional)<br><b>Sun</b> rest</p>
+      <p>Keep an upper or rest day next to PT so your knee/hip are fresh. Don't do a heavy single-leg / eccentric lower day right before your PT knee session.</p></div>
+    <div class="info-block"><h3>How hard, how long</h3><ul>
+      <li>Leave 2–3 reps in the tank — control beats load, especially early.</li>
+      <li>Rest ~60–90 sec; superset an upper push with a pull to stay near 45 min.</li>
+      <li>Keep the rowing warmup easy so you don't pre-fatigue your back/glutes.</li>
+      <li>Deep static stretches (figure-4, QL) go after the session, not before.</li></ul></div>
+    <div class="info-block"><h3>Coordinate with your PT</h3><p>Your PT-tagged exercises and the get-ups all load the knee, hip, or spine you're rehabbing. Run loads, angles, ranges, and acceptable tendon discomfort past your therapist.</p></div>
+    <div class="info-block"><h3>Knee pain zones (front of knee)</h3><ul>
+      <li><b>Front, on/below the kneecap</b> — donor site. Familiar tenderness that warms up and eases is usually OK to train.</li>
+      <li><b>Side creases (inner &amp; outer joint line)</b> — sharp or catching pain here is different tissue; flag it for PT.</li>
+      <li><b>Deep inside the joint</b> — cartilage/meniscus territory. Sharp pain, catching, or locking = stop and report.</li>
+      <li>Most provoking moves: pistols, deep leg-press/squat range, and the get-up's lunge/turn.</li></ul></div>
+    <div class="flags"><h3>Stop and back off</h3><ul>
+      <li><b>Watch your legs:</b> pain/tingling/numbness travelling down the leg — stop that move, note it here for PT.</li>
+      <li><b>Knee:</b> tenderness that eases as you warm up is okay; sharp anterior-knee or donor-site pain means reduce load/range.</li>
+      <li>Skip the loaded back-extension (hyperextension) machine — common sciatica aggravator.</li></ul></div>
+  </div>`;
+}
+function historyPanel(){
+  const io=`<div class="io"><button data-export>⬇ Export backup</button><button data-import>⬆ Import backup</button><input type="file" id="imp" accept="application/json" style="display:none"></div>`;
+  if(!store.history.length){return `<div class="panel" id="p-history"><p class="day-h">History</p><p class="day-focus">Saved sessions</p>${io}<p class="empty">No saved sessions yet.<br>Log a day, then tap <b>Save session</b>.</p></div>`;}
+  const items=store.history.slice().reverse().map((h,idx)=>{
+    const realIdx=store.history.length-1-idx;
+    const dt=new Date(h.date);
+    const dstr=dt.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})+" · "+dt.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
+    const entries=h.entries.map(e=>`<p class="hist-e"><b>${escapeHtml(e.n)}:</b> ${escapeHtml(e.v)}</p>`).join("");
+    return `<div class="hist-item"><p class="hist-date">${dstr}</p><p class="hist-day">${escapeHtml(h.dayName)}</p>${entries}<button class="hist-del" data-del="${realIdx}">Delete</button></div>`;
+  }).join("");
+  return `<div class="panel" id="p-history"><p class="day-h">History</p><p class="day-focus">${store.history.length} saved session${store.history.length>1?"s":""}</p>${io}${items}</div>`;
+}
+function weekStart(){
+  const d=new Date();const day=(d.getDay()+6)%7; // 0=Mon
+  d.setHours(0,0,0,0);d.setDate(d.getDate()-day);return d;
+}
+function firstNum(s){const m=String(s).match(/-?\d+(?:\.\d+)?/);return m?parseFloat(m[0]):null;}
+function weekPanel(){
+  const ws=weekStart();
+  const wsLabel=ws.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  const wk=store.history.filter(h=>new Date(h.date)>=ws);
+  if(!wk.length){
+    return `<div class="panel" id="p-week"><p class="day-h">This Week</p><p class="day-focus">Since Mon ${wsLabel}</p>
+      <p class="empty">No sessions logged this week yet.<br>Finish a day and tap <b>Save session</b> to see your summary here.</p></div>`;
+  }
+  // stats
+  let exCount=0;const dayTypes={};
+  wk.forEach(h=>{exCount+=h.entries.length;dayTypes[h.dayName]=(dayTypes[h.dayName]||0)+1;});
+  const distinctDays=Object.keys(dayTypes).length;
+  // prior values (before this week): latest per exercise name
+  const prior={};
+  store.history.filter(h=>new Date(h.date)<ws).forEach(h=>{h.entries.forEach(e=>{prior[e.n]=e.v;});});
+  // this week's latest per exercise
+  const cur={};
+  wk.forEach(h=>{h.entries.forEach(e=>{cur[e.n]=e.v;});});
+  const stat=(n,l)=>`<div class="stat"><div class="stat-n">${n}</div><div class="stat-l">${l}</div></div>`;
+  const stats=`<div class="stats">${stat(wk.length,"session"+(wk.length>1?"s":""))}${stat(distinctDays,"day type"+(distinctDays>1?"s":""))}${stat(exCount,"logged")}</div>`;
+  // sessions list
+  const sess=wk.slice().reverse().map(h=>{
+    const dt=new Date(h.date);
+    const ds=dt.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+    return `<p class="wk-sess"><b>${escapeHtml(h.dayName)}</b> · ${ds}</p>`;
+  }).join("");
+  // progress vs last time
+  const rows=Object.keys(cur).map(n=>{
+    const c=cur[n],p=prior[n];
+    let tag="",cls="pr-new",txt="new";
+    if(p!==undefined){
+      const cn=firstNum(c),pn=firstNum(p);
+      if(cn!==null&&pn!==null){
+        if(cn>pn){cls="pr-up";txt="▲ up";}
+        else if(cn<pn){cls="pr-dn";txt="▼ down";}
+        else{cls="pr-same";txt="=";}
+      } else {cls="pr-same";txt="logged";}
+      tag=`<span class="pr-prev">was ${escapeHtml(p)}</span>`;
+    }
+    return `<div class="pr-row"><div class="pr-name">${escapeHtml(n)}</div>
+      <div class="pr-vals"><span class="pr-cur">${escapeHtml(c)}</span> ${tag}</div>
+      <span class="pr-tag ${cls}">${txt}</span></div>`;
+  }).join("");
+  return `<div class="panel" id="p-week"><p class="day-h">This Week</p><p class="day-focus">Since Mon ${wsLabel}</p>
+    ${stats}
+    <p class="group-h">Sessions</p>${sess}
+    <p class="group-h">Progress vs last time</p>${rows}
+    <p class="wk-note">"▲ up" compares the first number you logged (usually weight) to your previous entry for that exercise. "new" means no earlier record yet.</p>
+  </div>`;
+}
+function render(){
+  const days=Object.keys(PLAN).map(dayPanel).join("");
+  mainEl.innerHTML=days+weekPanel()+infoPanel()+historyPanel();
+  showPanel();
+}
+function showPanel(){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  const el=document.getElementById("p-"+current);
+  if(el)el.classList.add("active");
+  setActiveTab();
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+/* ---------------- EVENTS ---------------- */
+tabsEl.addEventListener("click",e=>{const b=e.target.closest(".tab");if(!b)return;current=b.dataset.p;showPanel();window.scrollTo({top:0,behavior:"smooth"});});
+
+mainEl.addEventListener("input",e=>{
+  if(e.target.matches(".log")){store.live[e.target.dataset.k]=e.target.value;persist();}
+});
+mainEl.addEventListener("change",e=>{
+  if(e.target.matches(".cb")){store.checks[e.target.dataset.c]=e.target.checked;persist();}
+});
+mainEl.addEventListener("click",e=>{
+  const save=e.target.closest("[data-save]");
+  const clr=e.target.closest("[data-clear]");
+  const del=e.target.closest("[data-del]");
+  const exp=e.target.closest("[data-export]");
+  const imp=e.target.closest("[data-import]");
+  if(save)saveSession(save.dataset.save);
+  if(clr)clearDay(clr.dataset.clear);
+  if(del)deleteSession(+del.dataset.del);
+  if(exp)exportData();
+  if(imp)document.getElementById("imp").click();
+});
+mainEl.addEventListener("change",e=>{if(e.target.id==="imp")importData(e.target.files[0]);});
+
+function saveSession(dayKey){
+  const d=PLAN[dayKey];const entries=[];
+  d.ex.forEach((ex,i)=>{
+    const key=dayKey+"-"+i;const v=(store.live[key]||"").trim();
+    if(v){entries.push({n:ex.n,v:v});store.last[key]=v;}
+  });
+  if(!entries.length){toast("Nothing logged to save");return;}
+  store.history.push({date:new Date().toISOString(),dayKey:dayKey,dayName:d.name,entries:entries});
+  d.ex.forEach((ex,i)=>{const key=dayKey+"-"+i;delete store.live[key];delete store.checks[key];});
+  persist();render();toast("Session saved ✓");
+}
+function clearDay(dayKey){
+  PLAN[dayKey].ex.forEach((ex,i)=>{const key=dayKey+"-"+i;delete store.live[key];delete store.checks[key];});
+  persist();render();toast("Day cleared");
+}
+function deleteSession(i){
+  if(!confirm("Delete this saved session?"))return;
+  store.history.splice(i,1);persist();render();toast("Deleted");
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(store,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);const a=document.createElement("a");
+  a.href=url;a.download="gym-log-backup-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  toast("Backup downloaded");
+}
+function importData(file){
+  if(!file)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);
+    if(!confirm("Load this backup? It replaces your current data."))return;
+    store=Object.assign({live:{},checks:{},last:{},history:[]},d);persist();render();toast("Backup loaded ✓");
+  }catch(err){toast("Couldn't read that file");}};
+  r.readAsText(file);
+}
+
+let toastT;
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1600);}
+
+buildTabs();render();
+</script>
+</body>
+</html>
