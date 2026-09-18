@@ -196,6 +196,19 @@ const PLAN = {
     {n:"Band pull-aparts or light cable row",t:"2 × 15",ph:"weight · notes"},
     {n:"Pallof press",t:"2 × 10 each side",ph:"weight · notes"},
     {n:"Superman / prone leg raises",t:"2 × 12",tag:"pt",ph:"notes"}
+  ]},
+  home:{tab:"Home",name:"Home Day (non-gym)",focus:"Abs · quads · hamstrings · hips + mobility · TRX + mini bands",ex:[
+    {n:"Cat–cow (warm-up)",t:"8–10 slow cycles",ph:"notes"},
+    {n:"Mini-band glute activation",t:"1–2 × 15 · side steps",ph:"band · notes"},
+    {n:"TRX assisted single-leg squat",t:"3 × 6–8 per leg · strap assist as needed",note:"Doubles as pistol progression. Start with the surgical leg; pain-free range.",ph:"assist level · notes"},
+    {n:"Wall sit (isometric)",t:"3 × 30–45 sec · pain-free angle",ph:"notes"},
+    {n:"Prone banded curl",t:"3 × 12 per leg",ph:"band · notes"},
+    {n:"Glute bridge",t:"3 × 12 · single-leg to progress",ph:"notes"},
+    {n:"Side-lying banded leg circles",t:"2 × 8 each direction, each leg",tag:"pt",note:"Pelvis stacked and still, slow and controlled. Both directions per side.",ph:"band · notes"},
+    {n:"Dead bug (± ball press)",t:"2 × 10 each side",note:"Harder: squeeze a ball between opposite hand & knee.",ph:"notes"},
+    {n:"Side plank",t:"2 × 20–30 sec each side · from knees if needed",ph:"notes"},
+    {n:"I-Y-T raises",t:"2 × 8–10 each position · light plates",note:"Thumbs up; squeeze shoulder blades, don't heave with the arms.",ph:"weight · notes"},
+    {n:"Mobility finisher",t:"figure-4 · nerve glides · quad stretch · TRX deep-squat hold",ph:"notes"}
   ]}
 };
 
@@ -217,7 +230,7 @@ const tabsEl=document.getElementById("tabs");
 const mainEl=document.getElementById("main");
 
 function buildTabs(){
-  const days=Object.keys(PLAN).map(k=>`<button class="tab" data-p="${k}">${k.replace('d','Day ')}</button>`).join("");
+  const days=Object.keys(PLAN).map(k=>`<button class="tab" data-p="${k}">${PLAN[k].tab||k.replace('d','Day ')}</button>`).join("");
   tabsEl.innerHTML=days+`<button class="tab" data-p="week">This Week</button><button class="tab" data-p="info">Info</button><button class="tab" data-p="history">History</button>`;
   setActiveTab();
 }
