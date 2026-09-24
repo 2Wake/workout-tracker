@@ -891,6 +891,8 @@ function slugOf(m){return MMAP[m]||m;}
 function textMatch(e,q){if(!q)return true;var parts=[e.n,e.e||""];(e.p||[]).concat(e.s||[]).forEach(function(m){parts.push(m.replace(/_/g," "));var d=slugOf(m);parts.push(d);parts.push(MNAME[d]||"");});return parts.join(" ").toLowerCase().indexOf(q)>-1;}
 function G(id){return document.getElementById(id);}
 function highlight(){var lvl={};selected.forEach(function(n){var e=byName(n);if(!e)return;(e.s||[]).forEach(function(m){var d=slugOf(m);if((lvl[d]||0)<1)lvl[d]=1;});(e.p||[]).forEach(function(m){var d=slugOf(m);lvl[d]=2;});});document.querySelectorAll("[data-m]").forEach(function(el){var l=lvl[el.dataset.m]||0;el.classList.toggle("pri",l===2);el.classList.toggle("sec",l===1);});}
+function orderBalanced(){if(selected.length<3)return;var remaining=selected.slice(),result=[],recency={},step=0;while(remaining.length){var bestIdx=0,bestCost=Infinity;for(var i=0;i<remaining.length;i++){var e=byName(remaining[i]);var ms=e?(e.p||[]).map(slugOf):[];var cost=0;ms.forEach(function(m){if(recency[m]!=null)cost+=1/(step-recency[m]+1);});if(cost<bestCost){bestCost=cost;bestIdx=i;}}var pick=remaining[bestIdx];result.push(pick);var pe=byName(pick);((pe&&pe.p)||[]).map(slugOf).forEach(function(m){recency[m]=step;});remaining.splice(bestIdx,1);step++;}selected=result;}
+
 function renderSelected(){
   var box=G("mm-selected");
   G("mm-count").textContent=selected.length?("\u00b7 "+selected.length):"";
@@ -927,7 +929,7 @@ function renderSessions(){
     return '<div class="sess"><div class="sess-top"><div class="sess-date">'+fmtDate(s.date)+'</div><button class="sess-btn" data-load="'+i+'">Load</button><button class="sess-del" data-del="'+i+'">Delete</button></div><div class="sess-ex">'+lines+'</div></div>';
   }).join("");
 }
-function createWorkout(){if(!selected.length){toast("Add or randomize exercises first");return;}logMode=true;save();renderSelected();window.scrollTo({top:0,behavior:"smooth"});toast("Workout created \u2014 log your weights");}
+function createWorkout(){if(!selected.length){toast("Add or randomize exercises first");return;}orderBalanced();logMode=true;save();renderSelected();window.scrollTo({top:0,behavior:"smooth"});toast("Workout created \u2014 log your weights");}
 function randomWorkout(){
   var kws=["DB","KB","Machine","Cable","TRX","Bodyweight","Band"];
   var pools={};kws.forEach(function(k){pools[k]=LIB.filter(function(x){return (x.e||"").toLowerCase().indexOf(k.toLowerCase())>-1;});});
